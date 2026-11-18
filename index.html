@@ -1,0 +1,1509 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <title>听写练习（English）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    body {
+      margin: 0;
+      font-family: "Noto Sans SC", sans-serif;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: 100vh; background-color: #f0f0f0;
+    }
+    .container {
+      text-align: center; padding: 20px; background: #fff; border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,.1); max-width: 720px; width: 92%;
+    }
+    .question { font-size: 28px; margin-bottom: 10px; }
+    .word { font-size: 34px; margin-bottom: 16px; }
+    .btns {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 15px;
+  margin-bottom: 14px;
+}
+
+.btn-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.search-box {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.search-box input {
+  font-size: 18px;
+  padding: 8px 12px;
+  width: 180px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+}
+
+.btn.search-btn {
+  background-color: #008cff;
+}
+
+    .btn {
+      font-size: 18px; padding: 10px 20px; border: none; border-radius: 8px;
+      background-color: #dc3545; color: #fff; cursor: pointer;
+    }
+    .btn.secondary { background-color: #6c757d; }
+    .btn.info { background-color: #dc3545; }
+    .btn.success { background-color: #dc3545; }
+    .btn.warning { background-color: #ffc107; color: #000; }
+    .meaning {
+      margin-top: 10px; font-size: 20px; background: #f8f9fa; border-radius: 8px;
+      padding: 12px; min-height: 60px; line-height: 1.6; white-space: pre-wrap;
+    }
+
+  .test-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.test-btn {
+  font-size: 18px;
+  padding: 12px 25px;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  cursor: pointer;
+}
+
+.reading-btn {
+  background-color: #007bff;
+}
+
+.meaning-btn {
+  background-color: #28a745;
+}
+
+.test-btn:hover {
+  opacity: 0.85;
+}
+
+.set-selector {
+  margin-bottom: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 18px;
+}
+
+.set-selector select {
+  font-size: 18px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background: white;
+}
+
+/* 真正含义按钮 - 紫色 */
+.btn.purple {
+  background-color: #8e44ad;
+  color: white;
+}
+
+.btn.purple:hover {
+  background-color: #732d91;
+}
+
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <div class="set-selector">
+  <label for="setSelect">选择词汇 Set：</label>
+  <select id="setSelect" onchange="changeSet()">
+  <option value="Set 1">Set 1</option>
+  <option value="Set 2">Set 2</option>
+  <option value="Set 3">Set 3</option>
+</select>
+</div>
+
+    <div class="search-box">
+  <input 
+  type="text" 
+  id="searchInput" 
+  placeholder=""
+  onkeydown="if(event.key === 'Enter') searchWord();"
+>
+
+  <button 
+    class="btn search-btn" 
+    onclick="searchWord()">
+    Search
+  </button>
+</div>
+    <div class="question" id="question">题目 1</div>
+    <div class="word" id="word">—</div>
+    
+    <div class="btns">
+      <!-- 华文优先 -->
+       <div class="btn-row">
+      <button class="btn" onclick="playEnglishWord()">🔊</button>
+      <button class="btn success" onclick="playMalayWord()">Bahasa Melayu</button>
+      <button class="btn info" onclick="showChinese()">华文</button>
+      </div>
+
+      <div class="btn-row">
+  <button class="btn purple" onclick="showTrueEnglish()">Meaning</button>      
+  <button class="btn purple" onclick="showTrueMalay()">Makna</button>  
+  <button class="btn purple" onclick="showTrueChinese()">含义</button>
+</div>
+
+      <div class="btn-row">
+      <button class="btn warning" onclick="showEnglishSentence()">Sentence</button>
+      <button class="btn warning" onclick="showMalaySentence()">Bina Ayat</button>      
+      <button class="btn warning" onclick="showChineseSentence()">造句</button>
+      
+      </div>
+
+      <div class="btn-row">
+      <button class="btn secondary" onclick="prevWord()">上一题</button>
+      <button class="btn secondary" onclick="nextWord()">下一题</button>
+      </div>
+
+</div>
+
+    <div class="meaning" id="meaning"></div>
+
+    <div class="test-buttons">
+  <button class="test-btn reading-btn" onclick="goToReadingTest()">
+    测试阅读
+  </button>
+
+  <button class="test-btn meaning-btn" onclick="goToMeaningTest()">
+    测试意思
+  </button>
+</div>
+
+  </div>
+
+  <script>
+    // ====== 词库 ======
+    const zh = [
+      "这",                // the
+  "一个",              // a
+  "和",                // and
+  "是",                // is
+  "在……里",           // in
+  "得到",              // got
+  "我的",              // my
+  "非常",              // very
+  "最喜欢的",          // favourite
+  "好的",              // good
+  "你的",              // your
+  "它",                // it
+  "在",                // at
+  "看",                // look
+  "日期",              // date
+  "是",                // are
+  "喜欢",              // like
+  "在……上",           // on
+  "有限的",            // limited
+  "听",                // listen
+  "到",                // to
+  "写",                // write
+  "有",                // have
+  "名字",              // name
+  "你",                // you
+  "词语",              // words
+  "读",                // read
+  "玩具",              // toy
+  "它是",              // it's
+  "是什么",            // what's
+  "正确",              // correct
+  "他的",              // his
+  "和……一起",         // with
+  "我们",              // we
+  "她的",              // her
+  "没有",              // no
+  "图片",              // pictures
+  "这个",              // this
+  "课本",              // textbook
+  "我已经",            // i've
+  "或者",              // or
+  "什么",              // what
+  "铅笔",              // pencil
+  "表演",              // performance
+  "图片",              // picture
+  "由",                // by
+  "英文",              // english
+  "我是",              // i'm
+  "年",                // year
+  "的",                // of
+  "是的",              // yes
+  "一个",              // an
+  "已检查",            // checked
+  "签名",              // signature
+  "颜色",              // colour
+  "任何",              // any
+  "书桌",              // desk
+  "还没有",            // haven't
+  "优秀",              // excellent
+  "课",                // lesson
+  "水平",              // level
+  "旧的",              // old
+  "单元",              // unit
+  "他",                // he
+  "圈出",              // circle
+  "阅读",              // reading
+  "说",                // say
+  "标准",              // standard
+  "答案",              // answer
+  "句子",              // sentences
+  "老师的",            // teacher's
+  "书包",              // bag
+  "不是",              // isn't
+  "宠物",              // pet
+  "红色",              // red
+  "猫",                // cat
+  "模块",              // module
+  "书",                // book
+  "绿色",              // green
+  "数字",              // number
+  "玩",                // play
+  "请",                // please
+  "在……下面",         // under
+  "不要",              // don't
+  "画",                // draw
+  "朋友",              // friends
+  "匹配",              // match
+  "学校",              // school
+  "她",                // she
+  "蓝色",              // blue
+  "有",                // has
+  "苹果",              // apple
+  "为了",              // for
+  "披萨",              // pizza
+  "展示",              // show
+  "说话",              // speaking
+  "怎样",              // how
+  "写作",              // writing
+  "盒子",              // case
+  "那里"               // there
+    ];
+
+    const py = [
+  "zhè",               // the
+  "yī gè",             // a
+  "hé",                // and
+  "shì",               // is
+  "zài……lǐ",           // in
+  "dé dào",            // got
+  "wǒ de",             // my
+  "fēi cháng",         // very
+  "zuì xǐ huān de",    // favourite
+  "hǎo de",            // good
+  "nǐ de",             // your
+  "tā",                // it
+  "zài",               // at
+  "kàn",               // look
+  "rì qī",             // date
+  "shì",               // are
+  "xǐ huān",           // like
+  "zài……shàng",        // on
+  "yǒu xiàn de",       // limited
+  "tīng",              // listen
+  "dào",               // to
+  "xiě",               // write
+  "yǒu",               // have
+  "míng zi",           // name
+  "nǐ",                // you
+  "cí yǔ",             // words
+  "dú",                // read
+  "wán jù",            // toy
+  "tā shì",            // it's
+  "shì shén me",       // what's
+  "zhèng què",         // correct
+  "tā de",             // his
+  "hé……yī qǐ",         // with
+  "wǒ men",            // we
+  "tā de",             // her
+  "méi yǒu",           // no
+  "tú piàn",           // pictures
+  "zhè gè",            // this
+  "kè běn",            // textbook
+  "wǒ yǐ jīng",        // i've
+  "huò zhě",           // or
+  "shén me",           // what
+  "qiān bǐ",           // pencil
+  "biǎo yǎn",          // performance
+  "tú piàn",           // picture
+  "yóu",               // by
+  "yīng wén",          // english
+  "wǒ shì",            // i'm
+  "nián",              // year
+  "de",                // of
+  "shì de",            // yes
+  "yī gè",             // an
+  "yǐ jiǎn chá",       // checked
+  "qiān míng",         // signature
+  "yán sè",            // colour
+  "rèn hé",            // any
+  "shū zhuō",          // desk
+  "hái méi yǒu",       // haven't
+  "yōu xiù",           // excellent
+  "kè",                // lesson
+  "shuǐ píng",         // level
+  "jiù de",            // old
+  "dān yuán",          // unit
+  "tā",                // he
+  "quān chū",          // circle
+  "yuè dú",            // reading
+  "shuō",              // say
+  "biāo zhǔn",         // standard
+  "dá àn",             // answer
+  "jù zi",             // sentences
+  "lǎo shī de",        // teacher's
+  "shū bāo",           // bag
+  "bù shì",            // isn't
+  "chǒng wù",          // pet
+  "hóng sè",           // red
+  "māo",               // cat
+  "mó kuài",           // module
+  "shū",               // book
+  "lǜ sè",             // green
+  "shù zì",            // number
+  "wán",               // play
+  "qǐng",              // please
+  "zài……xià miàn",     // under
+  "bù yào",            // don't
+  "huà",               // draw
+  "péng you",          // friends
+  "pǐ pèi",            // match
+  "xué xiào",          // school
+  "tā",                // she
+  "lán sè",            // blue
+  "yǒu",               // has
+  "píng guǒ",          // apple
+  "wèi le",            // for
+  "pī sà",             // pizza
+  "zhǎn shì",          // show
+  "shuō huà",          // speaking
+  "zěn yàng",          // how
+  "xiě zuò",           // writing
+  "hé zi",             // case
+  "nà lǐ"              // there
+];
+
+    const en = [
+      "the",
+  "a",
+  "and",
+  "is",
+  "in",
+  "got",
+  "my",
+  "very",
+  "favourite",
+  "good",
+  "your",
+  "it",
+  "at",
+  "look",
+  "date",
+  "are",
+  "like",
+  "on",
+  "limited",
+  "listen",
+  "to",
+  "write",
+  "have",
+  "name",
+  "you",
+  "words",
+  "read",
+  "toy",
+  "it's",
+  "what's",
+  "correct",
+  "his",
+  "with",
+  "we",
+  "her",
+  "no",
+  "pictures",
+  "this",
+  "textbook",
+  "i've",
+  "or",
+  "what",
+  "pencil",
+  "performance",
+  "picture",
+  "by",
+  "english",
+  "i'm",
+  "year",
+  "of",
+  "yes",
+  "an",
+  "checked",
+  "signature",
+  "colour",
+  "any",
+  "desk",
+  "haven't",
+  "excellent",
+  "lesson",
+  "level",
+  "old",
+  "unit",
+  "he",
+  "circle",
+  "reading",
+  "say",
+  "standard",
+  "answer",
+  "sentences",
+  "teacher's",
+  "bag",
+  "isn't",
+  "pet",
+  "red",
+  "cat",
+  "module",
+  "book",
+  "green",
+  "number",
+  "play",
+  "please",
+  "under",
+  "don't",
+  "draw",
+  "friends",
+  "match",
+  "school",
+  "she",
+  "blue",
+  "has",
+  "apple",
+  "for",
+  "pizza",
+  "show",
+  "speaking",
+  "how",
+  "writing",
+  "case",
+  "there"
+    ];
+
+    const ms = [
+"itu",               // the
+  "satu",              // a
+  "dan",               // and
+  "ialah",             // is
+  "di dalam",          // in
+  "dapat",             // got
+  "saya punya",        // my
+  "sangat",            // very
+  "kegemaran",         // favourite
+  "baik",              // good
+  "kamu punya",        // your
+  "ia",                // it
+  "di",                // at
+  "lihat",             // look
+  "tarikh",            // date
+  "ialah",             // are
+  "suka",              // like
+  "di atas",           // on
+  "terhad",            // limited
+  "dengar",            // listen
+  "ke",                // to
+  "tulis",             // write
+  "ada",               // have
+  "nama",              // name
+  "kamu",              // you
+  "perkataan",         // words
+  "baca",              // read
+  "mainan",            // toy
+  "ia ialah",          // it's
+  "apa itu",           // what's
+  "betul",             // correct
+  "dia punya",         // his
+  "dengan",            // with
+  "kami",              // we
+  "dia punya",         // her
+  "tiada",             // no
+  "gambar",            // pictures
+  "ini",               // this
+  "buku teks",         // textbook
+  "saya sudah",        // i've
+  "atau",              // or
+  "apa",               // what
+  "pensel",            // pencil
+  "persembahan",       // performance
+  "gambar",            // picture
+  "oleh",              // by
+  "Bahasa Inggeris",   // english
+  "saya ialah",        // i'm
+  "tahun",             // year
+  "daripada",          // of
+  "ya",                // yes
+  "satu",              // an
+  "telah diperiksa",   // checked
+  "tandatangan",       // signature
+  "warna",             // colour
+  "apa-apa",           // any
+  "meja tulis",        // desk
+  "belum",             // haven't
+  "cemerlang",         // excellent
+  "pelajaran",         // lesson
+  "tahap",             // level
+  "lama",              // old
+  "unit",              // unit
+  "dia",               // he
+  "bulatkan",          // circle
+  "bacaan",            // reading
+  "cakap",             // say
+  "standard",          // standard
+  "jawapan",           // answer
+  "ayat",              // sentences
+  "cikgu punya",       // teacher's
+  "beg",               // bag
+  "bukan",             // isn't
+  "haiwan peliharaan", // pet
+  "merah",             // red
+  "kucing",            // cat
+  "modul",             // module
+  "buku",              // book
+  "hijau",             // green
+  "nombor",            // number
+  "bermain",           // play
+  "sila",              // please
+  "di bawah",          // under
+  "jangan",            // don't
+  "lukis",             // draw
+  "kawan",             // friends
+  "padankan",          // match
+  "sekolah",           // school
+  "dia",               // she
+  "biru",              // blue
+  "ada",               // has
+  "epal",              // apple
+  "untuk",             // for
+  "piza",              // pizza
+  "tunjuk",            // show
+  "bercakap",          // speaking
+  "bagaimana",         // how
+  "penulisan",         // writing
+  "kotak",             // case
+  "di sana"            // there
+];
+
+    const zhSentences = [
+      "这本书很有趣。",                               // the
+  "我有一个苹果。",                               // a
+  "我和你。",                                     // and
+  "他是我的老师。",                               // is
+  "书在书包里。",                                 // in
+  "我得到了一份礼物。",                           // got
+  "我的名字是阿里。",                             // my
+  "这朵花非常美丽。",                             // very
+  "我最喜欢的食物是面。",                         // favourite
+  "你是一个好学生。",                             // good
+  "你的书包很重。",                               // your
+  "它是一只猫。",                                 // it
+  "我在学校。",                                   // at
+  "请看黑板。",                                   // look
+  "今天是几月几日？",                             // date
+  "我们是好朋友。",                               // are
+  "我喜欢吃苹果。",                               // like
+  "书在桌子上。",                                 // on
+  "座位有限。",                                   // limited
+  "请听老师说话。",                               // listen
+  "我想去学校。",                                 // to
+  "请写你的名字。",                               // write
+  "我有两本书。",                                 // have
+  "我的名字是西蒂。",                             // name
+  "你是我的好朋友。",                             // you
+  "请写十个词语。",                               // words
+  "我喜欢读书。",                                 // read
+  "这是我的玩具。",                               // toy
+  "它是一个红色的球。",                           // it's
+  "你叫什么名字？",                               // what's
+  "你的答案是正确的。",                           // correct
+  "他的名字是阿末。",                             // his
+  "我和朋友一起去学校。",                         // with
+  "我们是学生。",                                 // we
+  "她的书包是蓝色的。",                           // her
+  "冰箱里没有牛奶。",                             // no
+  "我喜欢画画。",                                 // pictures
+  "这是我的书。",                                 // this
+  "这是我的课本。",                               // textbook
+  "我已经做完功课了。",                           // i've
+  "你可以吃苹果或者橙。",                         // or
+  "你在做什么？",                                 // what
+  "这是我的铅笔。",                               // pencil
+  "这个表演很好。",                               // performance
+  "这是一张图片。",                               // picture
+  "这本书是我老师写的。",                         // by
+  "我喜欢英文。",                                 // english
+  "我是学生。",                                   // i'm
+  "今年是2024年。",                               // year
+  "这是我的书。",                                 // of
+  "是的，我喜欢它。",                             // yes
+  "我有一个苹果。",                               // an
+  "我的功课已经被检查了。",                       // checked
+  "请在这里签名。",                               // signature
+  "这朵花是什么颜色？",                           // colour
+  "你有什么问题吗？",                             // any
+  "这本书在书桌上。",                             // desk
+  "我还没有吃完午餐。",                           // haven't
+  "你的作品很优秀。",                             // excellent
+  "今天我们学第三课。",                           // lesson
+  "这本书是第二级的。",                           // level
+  "这是一本旧书。",                               // old
+  "今天我们学第一单元。",                         // unit
+  "他是我的哥哥。",                               // he
+  "请圈出正确的答案。",                           // circle
+  "我喜欢阅读。",                                 // reading
+  "请说出你的名字。",                             // say
+  "这是标准答案。",                               // standard
+  "请回答我的问题。",                             // answer
+  "请写五个句子。",                               // sentences
+  "这是老师的书桌。",                             // teacher's
+  "我的书包是绿色的。",                           // bag
+  "她不是我的姐姐。",                             // isn't
+  "我有一只宠物猫。",                             // pet
+  "苹果是红色的。",                               // red
+  "猫在睡觉。",                                   // cat
+  "这是第一模块。",                               // module
+  "这本书很有趣。",                               // book
+  "我的书包是绿色的。",                           // green
+  "请写数字。",                                   // number
+  "我喜欢踢足球。",                               // play
+  "请帮助我。",                                   // please
+  "猫在桌子下面。",                               // under
+  "不要在课室里跑。",                             // don't
+  "我喜欢画画。",                                 // draw
+  "他们是我的朋友。",                             // friends
+  "请把词语和图片匹配。",                         // match
+  "我的学校很大。",                               // school
+  "她是我的姐姐。",                               // she
+  "天空是蓝色的。",                               // blue
+  "她有一个新书包。",                             // has
+  "我每天吃一个苹果。",                           // apple
+  "这份礼物是给你的。",                           // for
+  "我喜欢吃披萨。",                               // pizza
+  "请给我看你的书。",                             // show
+  "我正在和老师说话。",                           // speaking
+  "你怎样去学校？",                               // how
+  "我正在写一封信。",                             // writing
+  "这是我的盒子。",                               // case
+  "桌子上有一本书。"                              // there
+    ];
+
+    const enSentences = [
+      "The book is very interesting.",                // the
+  "I have an apple.",                             // a
+  "You and I are friends.",                       // and
+  "He is my teacher.",                            // is
+  "The book is in the bag.",                      // in
+  "I got a gift.",                                // got
+  "My name is Ali.",                              // my
+  "This flower is very beautiful.",               // very
+  "My favourite food is noodles.",                // favourite
+  "You are a good student.",                      // good
+  "Your bag is very heavy.",                      // your
+  "It is a cat.",                                 // it
+  "I am at school.",                              // at
+  "Look at the blackboard.",                      // look
+  "What is the date today?",                      // date
+  "We are good friends.",                         // are
+  "I like to eat apples.",                        // like
+  "The book is on the table.",                    // on
+  "The seats are limited.",                       // limited
+  "Please listen to the teacher.",                // listen
+  "I want to go to school.",                      // to
+  "Please write your name.",                      // write
+  "I have two books.",                            // have
+  "My name is Siti.",                             // name
+  "You are my good friend.",                      // you
+  "Please write ten words.",                      // words
+  "I like to read books.",                        // read
+  "This is my toy.",                              // toy
+  "It's a red ball.",                             // it's
+  "What's your name?",                            // what's
+  "Your answer is correct.",                      // correct
+  "His name is Ahmad.",                           // his
+  "I go to school with my friend.",               // with
+  "We are students.",                             // we
+  "Her bag is blue.",                             // her
+  "There is no milk in the fridge.",              // no
+  "I like to draw pictures.",                     // pictures
+  "This is my book.",                             // this
+  "This is my textbook.",                         // textbook
+  "I've finished my homework.",                   // i've
+  "You can eat an apple or an orange.",           // or
+  "What are you doing?",                          // what
+  "This is my pencil.",                           // pencil
+  "The performance is very good.",                // performance
+  "This is a picture.",                           // picture
+  "This book is written by my teacher.",          // by
+  "I like English.",                              // english
+  "I'm a student.",                               // i'm
+  "This year is 2024.",                           // year
+  "This is my book.",                             // of
+  "Yes, I like it.",                              // yes
+  "I have an apple.",                             // an
+  "My homework has been checked.",                // checked
+  "Please write your signature here.",            // signature
+  "What colour is this flower?",                  // colour
+  "Do you have any questions?",                   // any
+  "The book is on the desk.",                     // desk
+  "I haven't finished my lunch.",                 // haven't
+  "Your work is excellent.",                      // excellent
+  "Today we learn Lesson Three.",                 // lesson
+  "This book is for Level Two.",                  // level
+  "This is an old book.",                         // old
+  "Today we learn Unit One.",                     // unit
+  "He is my brother.",                            // he
+  "Please circle the correct answer.",            // circle
+  "I like reading books.",                        // reading
+  "Please say your name.",                        // say
+  "This is the standard answer.",                 // standard
+  "Please answer my question.",                   // answer
+  "Please write five sentences.",                 // sentences
+  "This is the teacher's desk.",                  // teacher's
+  "My bag is green.",                             // bag
+  "She isn't my sister.",                         // isn't
+  "I have a pet cat.",                            // pet
+  "The apple is red.",                            // red
+  "The cat is sleeping.",                         // cat
+  "This is Module One.",                          // module
+  "This book is very interesting.",               // book
+  "My bag is green.",                             // green
+  "Please write the number.",                     // number
+  "I like to play football.",                     // play
+  "Please help me.",                              // please
+  "The cat is under the table.",                  // under
+  "Don't run in the classroom.",                  // don't
+  "I like to draw.",                              // draw
+  "They are my friends.",                         // friends
+  "Please match the words with the pictures.",    // match
+  "My school is very big.",                       // school
+  "She is my sister.",                            // she
+  "The sky is blue.",                             // blue
+  "She has a new bag.",                           // has
+  "I eat an apple every day.",                    // apple
+  "This gift is for you.",                        // for
+  "I like to eat pizza.",                         // pizza
+  "Please show me your book.",                    // show
+  "I am speaking to my teacher.",                 // speaking
+  "How do you go to school?",                     // how
+  "I am writing a letter.",                       // writing
+  "This is my case.",                             // case
+  "There is a book on the table."                 // there
+    ];
+
+    const msSentences = [
+      "Buku itu sangat menarik.",                     // the
+  "Saya ada sebiji epal.",                        // a
+  "Saya dan Ali kawan.",                          // and
+  "Dia ialah guru saya.",                         // is
+  "Buku di dalam beg.",                           // in
+  "Saya dapat satu hadiah.",                      // got
+  "Nama saya Ali.",                               // my
+  "Bunga ini sangat cantik.",                     // very
+  "Makanan kegemaran saya ialah mee.",            // favourite
+  "Kamu murid yang baik.",                        // good
+  "Beg kamu sangat berat.",                       // your
+  "Ia ialah seekor kucing.",                      // it
+  "Saya di sekolah.",                             // at
+  "Lihat papan hitam.",                           // look
+  "Hari ini tarikh berapa?",                      // date
+  "Kami kawan baik.",                             // are
+  "Saya suka makan epal.",                        // like
+  "Buku di atas meja.",                           // on
+  "Tempat duduk terhad.",                         // limited
+  "Sila dengar cikgu bercakap.",                  // listen
+  "Saya mahu pergi ke sekolah.",                  // to
+  "Sila tulis nama kamu.",                        // write
+  "Saya ada dua buku.",                           // have
+  "Nama saya Siti.",                              // name
+  "Kamu kawan baik saya.",                        // you
+  "Sila tulis sepuluh perkataan.",                // words
+  "Saya suka membaca.",                           // read
+  "Ini mainan saya.",                             // toy
+  "Ia ialah sebiji bola merah.",                  // it's
+  "Siapa nama kamu?",                             // what's
+  "Jawapan kamu betul.",                          // correct
+  "Namanya Ahmad.",                               // his
+  "Saya pergi ke sekolah dengan kawan.",          // with
+  "Kami murid.",                                  // we
+  "Beg dia berwarna biru.",                       // her
+  "Tiada susu di dalam peti sejuk.",              // no
+  "Saya suka melukis gambar.",                    // pictures
+  "Ini buku saya.",                               // this
+  "Ini buku teks saya.",                          // textbook
+  "Saya sudah siap membuat kerja rumah.",         // i've
+  "Kamu boleh makan epal atau oren.",             // or
+  "Apa yang kamu buat?",                          // what
+  "Ini pensel saya.",                             // pencil
+  "Persembahan ini sangat baik.",                 // performance
+  "Ini sekeping gambar.",                         // picture
+  "Buku ini ditulis oleh cikgu saya.",            // by
+  "Saya suka Bahasa Inggeris.",                   // english
+  "Saya seorang murid.",                          // i'm
+  "Tahun ini ialah tahun 2024.",                  // year
+  "Ini buku saya.",                               // of
+  "Ya, saya suka.",                               // yes
+  "Saya ada sebiji epal.",                        // an
+  "Kerja rumah saya telah diperiksa.",            // checked
+  "Sila tulis tandatangan di sini.",              // signature
+  "Apa warna bunga ini?",                         // colour
+  "Ada apa-apa soalan?",                          // any
+  "Buku di atas meja tulis.",                     // desk
+  "Saya belum habis makan tengah hari.",          // haven't
+  "Kerja kamu cemerlang.",                        // excellent
+  "Hari ini kita belajar pelajaran ketiga.",      // lesson
+  "Buku ini untuk tahap dua.",                    // level
+  "Ini buku lama.",                               // old
+  "Hari ini kita belajar unit satu.",             // unit
+  "Dia abang saya.",                              // he
+  "Sila bulatkan jawapan yang betul.",            // circle
+  "Saya suka bacaan buku.",                       // reading
+  "Sila cakap nama kamu.",                        // say
+  "Ini jawapan standard.",                        // standard
+  "Sila jawab soalan saya.",                      // answer
+  "Sila tulis lima ayat.",                        // sentences
+  "Ini meja cikgu.",                              // teacher's
+  "Beg saya berwarna hijau.",                     // bag
+  "Dia bukan kakak saya.",                        // isn't
+  "Saya ada seekor kucing peliharaan.",           // pet
+  "Epal itu merah.",                              // red
+  "Kucing itu sedang tidur.",                     // cat
+  "Ini modul satu.",                              // module
+  "Buku ini sangat menarik.",                     // book
+  "Beg saya berwarna hijau.",                     // green
+  "Sila tulis nombor.",                           // number
+  "Saya suka bermain bola sepak.",                // play
+  "Sila tolong saya.",                            // please
+  "Kucing di bawah meja.",                        // under
+  "Jangan berlari di dalam bilik darjah.",        // don't
+  "Saya suka melukis.",                           // draw
+  "Mereka kawan saya.",                           // friends
+  "Sila padankan perkataan dengan gambar.",       // match
+  "Sekolah saya sangat besar.",                   // school
+  "Dia kakak saya.",                              // she
+  "Langit berwarna biru.",                        // blue
+  "Dia ada beg baharu.",                          // has
+  "Saya makan sebiji epal setiap hari.",          // apple
+  "Hadiah ini untuk kamu.",                       // for
+  "Saya suka makan piza.",                        // pizza
+  "Sila tunjukkan buku kamu.",                    // show
+  "Saya sedang bercakap dengan cikgu.",           // speaking
+  "Bagaimana kamu pergi ke sekolah?",             // how
+  "Saya sedang menulis surat.",                   // writing
+  "Ini kotak saya.",                              // case
+  "Terdapat sebuah buku di atas meja."            // there
+    ];
+
+    // ===== Set 词库管理 =====
+const wordSets = {
+  "Set 1": {
+    zh: zh,
+    py: py,
+    en: en,
+    ms: ms,
+
+zhMeaning: [
+    "用来指特定的人或物。",                         // the
+  "一个（用于辅音开头的词前）。",                 // a
+  "用来连接两个词或句子。",                       // and
+  "表示“是”或“存在”。",                          // is
+  "在某个空间的里面。",                           // in
+  "得到或获得。",                                 // got
+  "属于我的。",                                   // my
+  "非常或很。",                                   // very
+  "最喜欢的。",                                   // favourite
+  "好的或不错的。",                               // good
+  "属于你的。",                                   // your
+  "指代前面提到的事物。",                         // it
+  "在某个地点或时间点。",                         // at
+  "用眼睛看。",                                   // look
+  "日期或日子。",                                 // date
+  "表示“是”或“存在”（复数）。",                  // are
+  "喜欢或觉得开心。",                             // like
+  "在某个物体的表面。",                           // on
+  "有限的，数量不多的。",                         // limited
+  "用耳朵听。",                                   // listen
+  "到某个方向或动作的方向。",                     // to
+  "用笔写字。",                                   // write
+  "拥有或具有。",                                 // have
+  "人或事物的称呼。",                             // name
+  "指代对方。",                                   // you
+  "语言里的词语。",                               // words
+  "看书或阅读文字。",                             // read
+  "用来玩的东西。",                               // toy
+  "它是（it is 的缩写）。",                       // it's
+  "是什么（what is 的缩写）。",                   // what's
+  "对的，没有错误。",                             // correct
+  "属于他的。",                                   // his
+  "和某人一起或带有。",                           // with
+  "指代我们大家。",                               // we
+  "属于她的。",                                   // her
+  "没有或不是。",                                 // no
+  "照片或图画（复数）。",                         // pictures
+  "指代近处的人或物。",                           // this
+  "学习用的教科书。",                             // textbook
+  "我已经（I have 的缩写）。",                    // i've
+  "或者，表示选择。",                             // or
+  "问事物的词。",                                 // what
+  "用来写字的工具。",                             // pencil
+  "表演或演出。",                                 // performance
+  "照片或图画。",                                 // picture
+  "由谁做的或通过。",                             // by
+  "英文或英语。",                                 // english
+  "我是（I am 的缩写）。",                        // i'm
+  "十二个月的时间。",                             // year
+  "属于……的。",                                   // of
+  "是的，表示同意。",                             // yes
+  "一个（用于元音开头的词前）。",                 // an
+  "已经检查过了。",                               // checked
+  "签名或签字。",                                 // signature
+  "颜色。",                                       // colour
+  "任何，无论哪个。",                             // any
+  "书桌或办公桌。",                               // desk
+  "还没有（have not 的缩写）。",                  // haven't
+  "优秀或极好的。",                               // excellent
+  "课或课程。",                                   // lesson
+  "水平或级别。",                                 // level
+  "旧的或老的。",                                 // old
+  "单元或单位。",                                 // unit
+  "指代男性。",                                   // he
+  "圈出或画圈。",                                 // circle
+  "阅读或看书。",                                 // reading
+  "说或讲。",                                     // say
+  "标准或规范的。",                               // standard
+  "答案或回复。",                                 // answer
+  "句子（复数）。",                               // sentences
+  "属于老师的。",                                 // teacher's
+  "书包或袋子。",                                 // bag
+  "不是（is not 的缩写）。",                      // isn't
+  "宠物或心爱的动物。",                           // pet
+  "红色。",                                       // red
+  "猫。",                                         // cat
+  "模块或单元。",                                 // module
+  "书。",                                         // book
+  "绿色。",                                       // green
+  "数字或号码。",                                 // number
+  "玩或玩耍。",                                   // play
+  "请，表示礼貌。",                               // please
+  "在某个物体的下面。",                           // under
+  "不要（do not 的缩写）。",                      // don't
+  "画画。",                                       // draw
+  "朋友（复数）。",                               // friends
+  "匹配或配对。",                                 // match
+  "学校。",                                       // school
+  "指代女性。",                                   // she
+  "蓝色。",                                       // blue
+  "有或拥有（第三人称单数）。",                   // has
+  "苹果。",                                       // apple
+  "为了或给。",                                   // for
+  "披萨。",                                       // pizza
+  "展示或给……看。",                              // show
+  "说话或口语。",                                 // speaking
+  "怎样或如何。",                                 // how
+  "写作或书写。",                                 // writing
+  "盒子或箱子。",                                 // case
+  "那里。",                                       // there
+  ],
+
+  msMeaning: [
+    "Kata untuk tunjuk benda.",                   // the
+  "Satu benda atau orang.",                     // a
+  "Kata untuk sambung dua perkara.",            // and
+  "Kata untuk menerangkan.",                    // is
+  "Di dalam.",                                  // in
+  "Dapat atau memperoleh.",                     // got
+  "Kepunyaan saya.",                            // my
+  "Sangat atau amat.",                          // very
+  "Paling disukai.",                            // favourite
+  "Elok atau bagus.",                           // good
+  "Kepunyaan kamu.",                            // your
+  "Kata ganti nama untuk benda.",               // it
+  "Di sesuatu tempat.",                         // at
+  "Lihat atau tengok.",                         // look
+  "Hari dan bulan.",                            // date
+  "Kata untuk menerangkan.",                    // are
+  "Rasa seronok.",                              // like
+  "Di atas.",                                   // on
+  "Tidak banyak, ada had.",                     // limited
+  "Dengar dengan teliti.",                      // listen
+  "Ke arah atau menuju.",                       // to
+  "Buat huruf atau perkataan.",                 // write
+  "Ada atau memiliki.",                         // have
+  "Panggilan untuk orang atau benda.",          // name
+  "Kata ganti nama diri orang kedua.",          // you
+  "Perkataan dalam bahasa.",                    // words
+  "Baca buku atau tulisan.",                    // read
+  "Benda untuk bermain.",                       // toy
+  "Ia ialah atau ia adalah.",                   // it's
+  "Apakah atau apa dia.",                       // what's
+  "Betul atau tepat.",                          // correct
+  "Kepunyaan dia (lelaki).",                    // his
+  "Bersama dengan.",                            // with
+  "Kami atau kita.",                            // we
+  "Kepunyaan dia (perempuan).",                 // her
+  "Tiada atau tidak ada.",                      // no
+  "Gambar atau foto.",                          // pictures
+  "Kata untuk tunjuk benda dekat.",             // this
+  "Buku untuk belajar.",                        // textbook
+  "Saya sudah.",                                // i've
+  "Pilihan untuk dua benda.",                   // or
+  "Soalan untuk tanya benda.",                  // what
+  "Alat untuk menulis.",                        // pencil
+  "Persembahan atau tunjuk bakat.",             // performance
+  "Gambar atau foto.",                          // picture
+  "Dibuat oleh.",                               // by
+  "Bahasa Inggeris.",                           // english
+  "Saya adalah.",                               // i'm
+  "Masa selama 12 bulan.",                      // year
+  "Daripada atau kepunyaan.",                   // of
+  "Ya atau betul.",                             // yes
+  "Satu (untuk benda).",                        // an
+  "Sudah diperiksa.",                           // checked
+  "Nama tanda tangan.",                         // signature
+  "Warna atau rona.",                           // colour
+  "Apa-apa atau mana-mana.",                    // any
+  "Meja untuk belajar.",                        // desk
+  "Belum atau tidak lagi.",                     // haven't
+  "Sangat baik atau cemerlang.",                // excellent
+  "Pelajaran atau topik.",                      // lesson
+  "Tahap atau peringkat.",                      // level
+  "Lama atau tua.",                             // old
+  "Satu bahagian dalam buku.",                  // unit
+  "Kata ganti nama untuk lelaki.",              // he
+  "Bulatkan atau tandakan.",                    // circle
+  "Bacaan atau bahan bacaan.",                  // reading
+  "Cakap atau sebut.",                          // say
+  "Piawai atau tetap.",                         // standard
+  "Jawapan kepada soalan.",                     // answer
+  "Susunan perkataan yang lengkap.",            // sentences
+  "Kepunyaan guru.",                            // teacher's
+  "Beg atau beg tangan.",                       // bag
+  "Bukan atau tidak.",                          // isn't
+  "Haiwan kesayangan.",                         // pet
+  "Warna merah.",                               // red
+  "Haiwan yang mengeong.",                      // cat
+  "Modul atau unit kecil.",                     // module
+  "Benda untuk membaca.",                       // book
+  "Warna hijau.",                               // green
+  "Nombor atau angka.",                         // number
+  "Bermain atau buat aktiviti.",                // play
+  "Sila atau tolong.",                          // please
+  "Di bawah.",                                  // under
+  "Jangan atau usah.",                          // don't
+  "Lukis atau conteng.",                        // draw
+  "Kawan atau sahabat.",                        // friends
+  "Padankan atau cocokkan.",                    // match
+  "Tempat untuk belajar.",                      // school
+  "Kata ganti nama untuk perempuan.",           // she
+  "Warna biru.",                                // blue
+  "Ada atau memiliki.",                         // has
+  "Buah yang manis.",                           // apple
+  "Untuk atau bagi.",                           // for
+  "Makanan berbentuk bulat.",                   // pizza
+  "Tunjuk atau pamerkan.",                      // show
+  "Bercakap atau berkomunikasi.",               // speaking
+  "Bagaimana atau macam mana.",                 // how
+  "Penulisan atau karangan.",                   // writing
+  "Kotak atau bekas.",                          // case
+  "Di sana atau di situ."                       // there
+  ],
+
+  enMeaning: [
+    "Used to point to a specific person or thing.", // the
+  "One (used before a consonant sound).",         // a
+  "Used to join two words or sentences.",         // and
+  "Shows that something exists or is true.",      // is
+  "Inside a space.",                              // in
+  "To get or receive.",                           // got
+  "Belonging to me.",                             // my
+  "Very or extremely.",                           // very
+  "Liked the most.",                              // favourite
+  "Good or nice.",                                // good
+  "Belonging to you.",                            // your
+  "Points to something already mentioned.",       // it
+  "At a place or time.",                          // at
+  "To see with your eyes.",                       // look
+  "The day and month.",                           // date
+  "Shows that something exists (plural).",        // are
+  "To enjoy or feel happy about.",                // like
+  "On the surface of something.",                 // on
+  "Not much, having a limit.",                    // limited
+  "To hear with your ears.",                      // listen
+  "In the direction of.",                         // to
+  "To write words with a pen.",                   // write
+  "To own or possess.",                           // have
+  "What a person or thing is called.",            // name
+  "Points to the person spoken to.",              // you
+  "Words in a language.",                         // words
+  "To look at and understand words.",             // read
+  "A thing to play with.",                        // toy
+  "It is (short form).",                          // it's
+  "What is (short form).",                        // what's
+  "Right, no mistake.",                           // correct
+  "Belonging to him.",                            // his
+  "Together with or having.",                     // with
+  "Points to us.",                                // we
+  "Belonging to her.",                            // her
+  "Not any or none.",                             // no
+  "Photos or drawings (plural).",                 // pictures
+  "Points to something near.",                    // this
+  "A book used for studying.",                    // textbook
+  "I have (short form).",                         // i've
+  "A choice between two things.",                 // or
+  "A word to ask about things.",                  // what
+  "A tool for writing.",                          // pencil
+  "A show or act.",                               // performance
+  "A photo or drawing.",                          // picture
+  "Done by or through.",                          // by
+  "The English language.",                        // english
+  "I am (short form).",                           // i'm
+  "A time of 12 months.",                         // year
+  "Belonging to or relating to.",                 // of
+  "Yes, showing agreement.",                      // yes
+  "One (used before a vowel sound).",             // an
+  "Already looked at.",                           // checked
+  "A person's name written by themselves.",       // signature
+  "The colour of something.",                     // colour
+  "Any one, no matter which.",                    // any
+  "A table for writing or working.",              // desk
+  "Have not (short form).",                       // haven't
+  "Very good.",                                   // excellent
+  "A class or a period of learning.",             // lesson
+  "A stage or standard.",                         // level
+  "Not new.",                                     // old
+  "One part of a book.",                          // unit
+  "Points to a male person.",                     // he
+  "To draw a round shape.",                       // circle
+  "The act of reading.",                          // reading
+  "To speak words.",                              // say
+  "A fixed or normal level.",                     // standard
+  "A reply to a question.",                       // answer
+  "Groups of words (plural).",                    // sentences
+  "Belonging to the teacher.",                    // teacher's
+  "A container for carrying things.",             // bag
+  "Is not (short form).",                         // isn't
+  "A loved animal kept at home.",                 // pet
+  "The colour red.",                              // red
+  "A small animal that says meow.",               // cat
+  "A unit or part of a course.",                  // module
+  "A thing to read.",                             // book
+  "The colour green.",                            // green
+  "A number or figure.",                          // number
+  "To have fun.",                                 // play
+  "A polite word to ask for something.",          // please
+  "Below something.",                             // under
+  "Do not (short form).",                         // don't
+  "To make a picture with a pencil or pen.",      // draw
+  "People you know well (plural).",               // friends
+  "To pair things that go together.",             // match
+  "A place to learn.",                            // school
+  "Points to a female person.",                   // she
+  "The colour blue.",                             // blue
+  "To own something (for he/she/it).",            // has
+  "A sweet fruit.",                               // apple
+  "For the purpose of or given to.",              // for
+  "A flat round food with cheese.",               // pizza
+  "To let someone see something.",                // show
+  "The act of talking.",                          // speaking
+  "In what way.",                                 // how
+  "The act of writing.",                          // writing
+  "A container or a situation.",                  // case
+  "In that place."                                // there
+  ],
+
+    zhSentences: zhSentences,
+    enSentences: enSentences,
+    msSentences: msSentences
+  },
+
+  "Set 2": {
+    zh: ["同学", "朋友", "辛辣"],
+    py: ["tóng xué", "péng you", "xīn là"],
+    en: ["classmate", "friend", "spicy"],
+    ms: ["rakan sekelas", "kawan", "pedas"],
+    zhSentences: [
+      "我的同学很友善。",
+      "他是我的好朋友。",
+      "我不喜欢吃辛辣的食物。"
+    ],
+    enSentences: [
+      "My classmate is friendly.",
+      "He is my good friend.",
+      "I do not like spicy food."
+    ],
+    msSentences: [
+      "Rakan sekelas saya sangat baik.",
+      "Dia ialah kawan baik saya.",
+      "Saya tidak suka makan makanan yang pedas."
+    ]
+  },
+
+  "Set 3": {
+    zh: ["篮球", "老师", "学校"],
+    py: ["lán qiú", "lǎo shī", "xué xiào"],
+    en: ["basketball", "teacher", "school"],
+    ms: ["bola keranjang", "guru", "sekolah"],
+    zhSentences: [
+      "我喜欢打篮球。",
+      "我的老师很亲切。",
+      "我每天去学校上课。"
+    ],
+    enSentences: [
+      "I like playing basketball.",
+      "My teacher is very kind.",
+      "I go to school every day."
+    ],
+    msSentences: [
+      "Saya suka bermain bola keranjang.",
+      "Guru saya sangat baik hati.",
+      "Saya pergi ke sekolah setiap hari."
+    ]
+  }
+};
+
+let activeSet = wordSets["Set 1"];
+
+    // ===== DOM & 语音 =====
+    let currentIndex = 0;
+    const questionDiv = document.getElementById('question');
+    const wordDiv = document.getElementById('word');
+    const meaningDiv = document.getElementById('meaning');
+
+    function setMeaning(text) { meaningDiv.textContent = text || ''; }
+
+    // 统一的朗读函数（默认：慢速 0.4、音高 0.6）
+    function speak(text, lang, preferNames = [], rate = 1.0, pitch = 0.6) {
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = lang;
+      u.rate = rate;
+      u.pitch = pitch;
+
+      const trySpeak = () => {
+        const voices = speechSynthesis.getVoices() || [];
+        let candidates = voices.filter(v => (v.lang || '').toLowerCase().startsWith(lang.toLowerCase()));
+        // 如果没有马来语，回退印尼语
+        if (!candidates.length && lang.toLowerCase().startsWith('ms')) {
+          candidates = voices.filter(v => (v.lang || '').toLowerCase().startsWith('id'));
+          if (candidates.length) u.lang = 'id-ID';
+        }
+        for (const key of preferNames) {
+          const found = candidates.find(v => (v.name || '').toLowerCase().includes(key.toLowerCase()));
+          if (found) { u.voice = found; break; }
+        }
+        if (!u.voice && candidates.length) u.voice = candidates[0];
+        speechSynthesis.cancel();
+        speechSynthesis.speak(u);
+      };
+
+      if (speechSynthesis.getVoices().length === 0) {
+        speechSynthesis.onvoiceschanged = trySpeak;
+      }
+      trySpeak();
+    }
+
+    // ===== 华文为主（按钮函数不再覆盖速率/音高）=====
+    function playChineseWord() {
+  const text = activeSet.zh[currentIndex] || '';
+  const pinyin = activeSet.py[currentIndex] || '';
+
+  setMeaning(pinyin);
+
+  speak(text, 'zh-CN', ['Xiaoyi','Microsoft']);
+}
+
+    function showEnglish() {
+      const text = activeSet.en[currentIndex] || '(待添加英文)';
+      setMeaning(text);
+      speak(text, 'en-US', ['Google','Microsoft','Natural']);
+    }
+
+    function playMalayWord(){
+
+const text = activeSet.ms[currentIndex] || '';
+
+setMeaning(text);
+
+speak(
+text,
+'ms-MY',
+['Microsoft','Malay','Bahasa']
+);
+
+}
+
+    function showChineseSentence() {
+      const text = activeSet.zhSentences[currentIndex] || '(待添加华文造句)';
+      setMeaning(text);
+      speak(text, 'zh-CN', ['Xiaoyi','Microsoft']);
+    }
+
+    function showEnglishSentence() {
+      const text = activeSet.enSentences[currentIndex] || '(待添加英文句子)';
+      setMeaning(text);
+      speak(text, 'en-US', ['Google','Microsoft','Natural']);
+    }
+
+    function showMalaySentence() {
+      const text = activeSet.msSentences[currentIndex] || '(待添加马来文句子)';
+      setMeaning(text);
+      speak(text, 'ms-MY', ['Rizwan','Microsoft','Malay','Bahasa']);
+    }
+
+    function nextWord() {
+
+if(currentIndex < activeSet.en.length - 1){
+
+currentIndex++;
+
+updateQuestion();
+
+}
+
+}
+
+    function prevWord(){
+
+if(currentIndex > 0){
+
+currentIndex--;
+
+updateQuestion();
+
+}
+
+}
+
+    function updateQuestion() {
+  questionDiv.innerText = `题目 ${currentIndex + 1}`;
+  wordDiv.innerText = activeSet.en[currentIndex] || '—';
+  setMeaning('');
+}
+
+
+// ===== 搜索功能 =====
+function searchWord() {
+
+  const keyword = document.getElementById("searchInput").value.trim().toLowerCase();
+
+  if (!keyword) {
+    alert("请输入要搜索的词语");
+    return;
+  }
+
+
+  const index = activeSet.en.findIndex(word => 
+word.toLowerCase() === keyword
+);
+
+
+  if (index !== -1) {
+
+    currentIndex = index;
+    updateQuestion();
+
+  } else {
+
+    alert("没有找到：" + keyword);
+
+  }
+
+}
+
+// ===== 真正含义 =====
+
+function showTrueChinese() {
+  const text = activeSet.zhMeaning[currentIndex] || '暂时没有华文解释';
+  setMeaning(text);
+  speak(text, 'zh-CN', ['Xiaoyi', 'Microsoft']);
+}
+
+function showTrueMalay() {
+  const text = activeSet.msMeaning[currentIndex] || 'Tiada penerangan Bahasa Melayu';
+  setMeaning(text);
+  speak(text, 'ms-MY', ['Microsoft', 'Malay', 'Bahasa']);
+}
+
+function showTrueEnglish() {
+  const text = activeSet.enMeaning[currentIndex] || 'No English explanation available';
+  setMeaning(text);
+  speak(text, 'en-US', ['Google', 'Microsoft', 'Natural']);
+}
+
+function showChinese(){
+
+const text = activeSet.zh[currentIndex] || '';
+
+setMeaning(text);
+
+speak(
+text,
+'zh-CN',
+['Xiaoyi','Microsoft']
+);
+
+}
+
+function playEnglishWord(){
+
+const text = activeSet.en[currentIndex] || '';
+
+setMeaning('');
+
+speak(
+text,
+'en-US',
+['Google','Microsoft','Natural']
+);
+
+}
+
+function goToReadingTest() {
+  const selectedSet = document.getElementById("setSelect").value;
+
+  window.location.href = `Reading/ReadingTest${selectedSet.replace("Set ", "Set")}.html`;
+}
+
+function goToMeaningTest() {
+  const selectedSet = document.getElementById("setSelect").value;
+
+  window.location.href = `Meaning/MeaningTest${selectedSet.replace("Set ", "Set")}.html`;
+}
+
+function changeSet() {
+  const selectedSet = document.getElementById("setSelect").value;
+
+  if (!wordSets[selectedSet]) return;
+
+  activeSet = wordSets[selectedSet];
+
+  currentIndex = 0;
+  updateQuestion();
+}
+
+updateQuestion();
+  </script>
+</body>
+</html>
