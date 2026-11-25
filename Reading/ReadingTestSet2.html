@@ -3034,6 +3034,24 @@ function normalizeMalay(value) {
 
     let similarity = 0;
 
+    // ===== 特殊语音识别容错 =====
+
+// I：Chrome 可能将单独的字母 I 识别不稳定
+if (
+    answer === "i" &&
+    (cleanText === "i" || cleanText === "eye")
+) {
+    similarity = 1;
+}
+
+// o'clock：允许不同的识别形式
+if (
+    answer === "oclock" &&
+    ["oclock", "o clock", "clock"].includes(cleanText)
+) {
+    similarity = 1;
+}
+
     // 忽略空格，例如：
     // dikitar 和 di kitar 可以视为相同
     // alam sekitar 和 alamsekitar 可以视为相同
