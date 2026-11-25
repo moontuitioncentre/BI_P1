@@ -3088,6 +3088,15 @@ function normalizeMalay(value) {
         }
     }
 
+    // ===== 特殊语音识别容错 =====
+// tick 经常被 Chrome 识别成 take
+if (
+    answer === "tick" &&
+    spokenTokens.some(token => token === "take")
+) {
+    similarity = 1;
+}
+
     // 更宽松的判断标准
     let threshold;
 
